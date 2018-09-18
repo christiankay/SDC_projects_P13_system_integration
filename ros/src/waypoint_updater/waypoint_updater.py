@@ -25,7 +25,7 @@ as well as to verify your TL classifier.
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
-LOOKAHEAD_WPS = 150
+LOOKAHEAD_WPS = 50
 SAFETY_BUFFER = 0.5
 UNKNOWN = -1
 MAX_DISTANCE = sys.maxint

@@ -16,7 +16,7 @@ from timeit import default_timer as timer
 UNKNOWN = -1
 MAX_DISTANCE = sys.maxint
 STATE_COUNT_THRESHOLD = 3
-FREQUENCY_IN_HERTZ= 5.0
+FREQUENCY_IN_HERTZ= 10
 
 
 class TLDetector (object):
