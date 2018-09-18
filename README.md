@@ -1,39 +1,71 @@
-# System Integration Project
-### Udacity Self Driving Car Term 3
-
-c0knaak@gmail.com
-
-### NOTE, IMPORTANT OR WILL NOT RUN:
-
-1. download faster_rcnn_resnet101_coco_11_06_2017 from https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md
-2. untar and move frozen_inference_graph.pb -> ros/src/tl_detector/light_classification/faster_rcnn_resnet101_coco_11_06_2017/frozen_inference_graph.pb
-
+[//]: # (Image References)
+[simulator]: ./doc/simulator.png
+[sim_red_detected]: ./doc/sim_red_detected.png
+[sim_green_detected]: ./doc/sim_green_detected.png
 
 
 This is the project repo for the final project of the Udacity Self-Driving Car Nanodegree: Programming a Real Self-Driving Car. For more information about the project, see the project introduction [here](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/e1a23b06-329a-4684-a717-ad476f0d8dff/lessons/462c933d-9f24-42d3-8bdc-a08a5fc866e4/concepts/5ab4b122-83e6-436d-850f-9f4d26627fd9).
 
-### Overview
+# Individual Submission
 
-The goal of this project was to integrate the various systems and modules of a self driving car so as to successfully pilot a car in a simulator and then a real car (CARLA). The car should be able to plot its own course, and identify and respond to traffic lights.
+Name 				| Udacity Account Email
+---------------- | ---------------------
+Christian Knaak | c0knaak(at)gmail.com
 
-![](images/final-project-ros-graph-v2.png)
 
-The primary modules are:
+## Description
 
-### 1. Waypoint Planning
+![alt-text][simulator]
 
-This module charts the desired course for the car and the desired speed. This module is responsible for integrating the information about traffic lights and car state and map to determine the best course. In this project it was fairly simple: if a red light is ahead, slow down. Otherwise the path was that of the road itself.
+### Waypoint Updater
 
-### 2. Control
+This node publishes waypoints from the car's current position to some `x` distance ahead. If an upcoming stop light is detected, the velocity of the waypoints will be adjusted and the car decelerates or accelerates depending on the light state.
 
-This module was responsible for controlling the car along the desired course. A PID controller was used for the speed while the steering controls were handled by a yaw controller fed by pure_pursuit.cpp.
+It was implemented by defining the following 4 states and changes between those states:
 
-### 3. Perception (Traffic light sensing and classification)
+State 				| Description
+---------------- | ---------------------
+Start Acceleration | This state determines how much acceleration is needed for the car to reach the target velocity. 
+Continue Acceleration | This state continues with the acceleration and keeps the target velocity if reached.
+Start Deceleration	  | This state determines how much deceleration is needed for the car to stop at the next stop line.
+Continue Deceleration | This state continues with the deceleration and keeps zero speed if reached.
 
-The traffic light module: ros/src/tl_detector idenitifes traffic lights in a camera feed and classifies them as Red, Yellow, or Green. This was accomplished by using a state of the art SSD trained by google and a simple opencv color thresholding script. Due to tensorflow version conflicts, resnet was used on the final version instead of the faster SSD mobilenet. On modest hardware this led to some interesting problems caused by the lag, optimizations are needed.
+### Drive-By-Wire Node / Twist Controller
 
-![](images/greenlight.png)
+#### Drive-By-Wire Node
 
+This node represents a drive by wire controller. It receives current and requested steering/velocities, calculates throttle, brake and steering commands and publishes them to the vehicle.
+
+#### Twist Controller
+
+This controller is responsible for acceleration and steering. The acceleration is controlled via PID controller. Steering is calculated using YawController which simply calculates needed angle to keep needed velocity.
+
+### Traffic Light Detection / Classification
+
+This node is responsible for detecting upcoming traffic lights and classify their states (red, yellow, green).
+
+Tensorflow's [Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) was used to detect and classify the traffic lights in the images provided by the camera.
+
+I used a separate repository to setup an environment to train/evaluate the pre-trained (SSD: Single Shot MultiBox Detector) tensorflow model [here](https://github.com/mkoehnke/CarND-Capstone-TrafficLightDetection).
+
+The image dataset is based on images taken from the simulator and bag files provided for this project. It was downloaded from this [repository](https://github.com/coldKnight/TrafficLight_Detection-TensorFlowAPI) and directly [here](https://drive.google.com/file/d/0B-Eiyn-CUQtxdUZWMkFfQzdObUE/view?usp=sharing).
+
+In order to increase the performance of the prediction, the images are preprocessed and scaled so that the width is max 300px.
+
+#### Examples
+
+![alt-text][sim_green_detected]
+![alt-text][sim_red_detected]
+
+### Flaws / Todos
+
+- Zero speed is not kept all the time when waiting at the traffic light. The car is accelerating/decelerting occasionally.
+
+- When driving manually off the track, the car is currently not able to steer back to the middle of the road.
+
+## Installation
+
+Please use **one** of the two installation options, either native **or** docker installation.
 
 ### Native Installation
 
@@ -50,7 +82,7 @@ The traffic light module: ros/src/tl_detector idenitifes traffic lights in a cam
   * [ROS Indigo](http://wiki.ros.org/indigo/Installation/Ubuntu) if you have Ubuntu 14.04.
 * [Dataspeed DBW](https://bitbucket.org/DataspeedInc/dbw_mkz_ros)
   * Use this option to install the SDK on a workstation that already has ROS installed: [One Line SDK Install (binary)](https://bitbucket.org/DataspeedInc/dbw_mkz_ros/src/81e63fcc335d7b64139d7482017d6a97b405e250/ROS_SETUP.md?fileviewer=file-view-default)
-* Download the [Udacity Simulator](https://github.com/udacity/CarND-Capstone/releases/tag/v1.2).
+* Download the [Udacity Simulator](https://github.com/udacity/CarND-Capstone/releases).
 
 ### Docker Installation
 [Install Docker](https://docs.docker.com/engine/installation/)
@@ -62,8 +94,11 @@ docker build . -t capstone
 
 Run the docker file
 ```bash
-docker run -p 127.0.0.1:4567:4567 -v $PWD:/capstone -v /tmp/log:/root/.ros/ --rm -it capstone
+docker run -p 4567:4567 -v $PWD:/capstone -v /tmp/log:/root/.ros/ --rm -it capstone
 ```
+
+### Port Forwarding
+To set up port forwarding, please refer to the [instructions from term 2](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/0949fca6-b379-42af-a919-ee50aa304e6a/lessons/f758c44c-5e40-4e01-93b5-1a82aa4e044f/concepts/16cf4a78-4fc7-49e1-8621-3450ca938b77)
 
 ### Usage
 
