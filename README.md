@@ -46,11 +46,8 @@ This node is responsible for detecting upcoming traffic lights and classify thei
 
 Tensorflow's [Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) was used to detect and classify the traffic lights in the images provided by the camera.
 
-I used a separate repository to setup an environment to train/evaluate the pre-trained (SSD: Single Shot MultiBox Detector) tensorflow model [here](https://github.com/mkoehnke/CarND-Capstone-TrafficLightDetection).
+I used a pre-trained (SSD: Single Shot MultiBox Detector) tensorflow model from M. Koehnke [here](https://github.com/mkoehnke/CarND-Capstone-TrafficLightDetection).
 
-The image dataset is based on images taken from the simulator and bag files provided for this project. It was downloaded from this [repository](https://github.com/coldKnight/TrafficLight_Detection-TensorFlowAPI) and directly [here](https://drive.google.com/file/d/0B-Eiyn-CUQtxdUZWMkFfQzdObUE/view?usp=sharing).
-
-In order to increase the performance of the prediction, the images are preprocessed and scaled so that the width is max 300px.
 
 #### Examples
 
